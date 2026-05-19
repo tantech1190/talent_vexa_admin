@@ -1,7 +1,7 @@
-# NaukriHub — Admin Panel
+# TalentVexa — Admin Panel
 
-React admin panel for the NaukriHub job portal. It talks to the same backend
-that powers the public site (`../naukri_website/server`).
+React admin panel for the TalentVexa job portal. It talks to the same backend
+that powers the public site (`../talent_vexa_website/server`).
 
 ## Features
 
@@ -14,13 +14,13 @@ that powers the public site (`../naukri_website/server`).
 
 ## Prerequisites
 
-The backend in `../naukri_website/server` must be running on `http://localhost:5090`.
+The backend in `../talent_vexa_website/server` must be running on `http://localhost:5090`.
 Bootstrap the admin account once (the project ships with no seed data):
 
 ```bash
-cd ../naukri_website/server
+cd ../talent_vexa_website/server
 npm install
-npm run create-admin     # default admin: admin@naukrihub.local / Admin@123
+npm run create-admin     # default admin: admin@talentvexa.local / Admin@123
 npm run dev
 ```
 
@@ -48,7 +48,7 @@ VITE_API_BASE=http://localhost:5090
 ## Project structure
 
 ```
-naukri_admin/
+talent_vexa_admin/
 ├── index.html
 ├── vite.config.js (port 5174)
 ├── tailwind.config.js
