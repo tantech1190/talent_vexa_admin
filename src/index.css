@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root { height: 100%; }
+  body {
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    background: #F4F8FC;
+    color: #0E2A47;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { letter-spacing: -0.02em; }
+}
+
+@layer components {
+  .btn          { @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition; }
+  .btn-primary  { @apply btn bg-cobalt text-white hover:bg-cobalt-600 shadow-glow; }
+  .btn-outline  { @apply btn border border-ink/15 bg-white text-ink hover:border-cobalt/50 hover:text-cobalt; }
+  .btn-ghost    { @apply btn border-transparent text-ink/75 hover:bg-cobalt/10 hover:text-cobalt; }
+  .btn-danger   { @apply btn bg-coral text-white hover:opacity-90; }
+  .btn-success  { @apply btn bg-emerald-600 text-white hover:bg-emerald-700; }
+
+  .input {
+    @apply w-full rounded-xl border border-ink/15 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-ink/40
+           focus:border-cobalt focus:ring-2 focus:ring-cobalt/20;
+  }
+  .label { @apply mb-1 block text-[11px] font-semibold uppercase tracking-[0.08em] text-ink/55; }
+
+  .card        { @apply rounded-2xl border border-ink/10 bg-white shadow-soft; }
+  .card-cloud  { @apply rounded-2xl border border-ink/10 bg-cloud; }
+
+  .chip        { @apply inline-flex items-center gap-1 rounded-full bg-ink/5 px-2 py-0.5 text-[11px] font-semibold text-ink/75; }
+  .chip-accent { @apply inline-flex items-center gap-1 rounded-full bg-cobalt/10 px-2 py-0.5 text-[11px] font-semibold text-cobalt-700; }
+  .chip-gold   { @apply inline-flex items-center gap-1 rounded-full bg-gold/15 px-2 py-0.5 text-[11px] font-semibold text-gold; }
+  .chip-emerald{ @apply inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700; }
+  .chip-coral  { @apply inline-flex items-center gap-1 rounded-full bg-coral/15 px-2 py-0.5 text-[11px] font-semibold text-coral; }
+  .chip-violet { @apply inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-700; }
+
+  .section-eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full border border-cobalt/20 bg-sky px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-cobalt-700;
+  }
+  .display     { font-family: 'Fraunces', 'Plus Jakarta Sans', serif; font-weight: 600; letter-spacing: -0.03em; }
+  .nav-link    { @apply flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition; }
+  .nav-link-active   { @apply bg-cobalt text-white shadow-glow; }
+  .nav-link-inactive { @apply text-ink/70 hover:bg-cobalt/[0.08] hover:text-ink; }
+}
+
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: rgba(14,42,71,0.18); border-radius: 6px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(14,42,71,0.28); }
