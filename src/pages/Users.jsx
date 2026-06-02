@@ -2,20 +2,24 @@ import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
-  Users as UsersIcon, Search, Ban, CheckCircle2, Eye, Download,
+  Users as UsersIcon, Search, Ban, CheckCircle2, Eye,
 } from 'lucide-react';
 import api from '../api/client';
+import ExportMenu from '../components/ExportMenu';
+import { useLocale } from '../context/LocaleContext';
 
 const ROLE_META = {
-  candidates: { label: 'Candidates', filter: 'jobseeker', tone: 'from-cobalt to-cobalt-700' },
-  employers:  { label: 'Employers',  filter: 'employer',  tone: 'from-violet-500 to-fuchsia-500' },
-  admins:     { label: 'Admins',     filter: 'admin',     tone: 'from-rose-500 to-red-500' },
+  candidates: { labelKey: 'users.candidates', filter: 'jobseeker', tone: 'from-cobalt to-cobalt-700' },
+  employers:  { labelKey: 'users.employers',  filter: 'employer',  tone: 'from-violet-500 to-fuchsia-500' },
+  admins:     { labelKey: 'users.admins',     filter: 'admin',     tone: 'from-rose-500 to-red-500' },
 };
 
 export default function Users() {
+  const { t } = useLocale();
   const { role = 'candidates' } = useParams();
   const [sp, setSp] = useSearchParams();
   const meta = ROLE_META[role] || ROLE_META.candidates;
+  const roleLabel = t(meta.labelKey);
   const [items, setItems] = useState([]);
   const [q, setQ] = useState(sp.get('q') || '');
   const [status, setStatus] = useState('');
@@ -41,12 +45,12 @@ export default function Users() {
 
   const toggleBlock = async (id) => {
     await api.put(`/users/${id}/block`);
-    toast.success('Status updated');
+    toast.success(t('common.status_updated'));
     load();
   };
   const verify = async (id) => {
     await api.put(`/users/${id}/verify`);
-    toast.success('User verified');
+    toast.success(t('common.user_verified'));
     load();
   };
 
@@ -54,10 +58,12 @@ export default function Users() {
     <div className="space-y-5">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <span className="section-eyebrow"><UsersIcon size={12} /> {meta.label}</span>
-          <h1 className="display mt-2 text-3xl">{meta.label}</h1>
+          <span className="section-eyebrow"><UsersIcon size={12} /> {roleLabel}</span>
+          <h1 className="display mt-2 text-3xl">{roleLabel}</h1>
           <p className="mt-1 text-sm text-ink/60">
-            {loading ? 'Loading…' : `${items.length.toLocaleString()} ${meta.label.toLowerCase()} on the platform`}
+            {loading
+              ? t('common.loading')
+              : t('users.count_on_platform', { n: items.length.toLocaleString(), label: roleLabel.toLowerCase() })}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -65,17 +71,22 @@ export default function Users() {
             <Search size={13} className="text-ink/40" />
             <input
               value={q} onChange={(e) => setQ(e.target.value)}
-              placeholder="Search name or email"
+              placeholder={t('users.search.placeholder')}
               className="w-64 bg-transparent py-2 text-sm outline-none placeholder:text-ink/40"
             />
           </form>
           <select value={status} onChange={(e) => setStatus(e.target.value)} className="input max-w-[160px]">
-            <option value="">All statuses</option>
-            <option value="active">Active</option>
-            <option value="blocked">Blocked</option>
-            <option value="pending">Pending</option>
+            <option value="">{t('common.all_statuses')}</option>
+            <option value="active">{t('common.active')}</option>
+            <option value="blocked">{t('common.blocked')}</option>
+            <option value="pending">{t('common.pending')}</option>
           </select>
-          <button className="btn-outline"><Download size={13} /> Export</button>
+          <ExportMenu
+            label={t('common.export')}
+            title={`${roleLabel} · ${new Date().toLocaleDateString()}`}
+            filename={`${roleLabel.toLowerCase()}-${new Date().toISOString().slice(0, 10)}`}
+            rows={buildUsersRows(role, items)}
+          />
         </div>
       </header>
 
@@ -84,12 +95,12 @@ export default function Users() {
           <table className="min-w-full text-sm">
             <thead className="bg-cloud text-left">
               <tr className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink/55">
-                <th className="px-5 py-3">User</th>
-                <th className="px-5 py-3">{role === 'employers' ? 'Company' : 'Headline'}</th>
-                <th className="px-5 py-3">{role === 'employers' ? 'Designation' : 'Location'}</th>
-                <th className="px-5 py-3">{role === 'admins' ? 'Role' : (role === 'employers' ? 'Posted' : 'Applied')}</th>
-                <th className="px-5 py-3">Status</th>
-                <th className="px-5 py-3">Last active</th>
+                <th className="px-5 py-3">{t('common.user')}</th>
+                <th className="px-5 py-3">{role === 'employers' ? t('common.company') : t('common.headline')}</th>
+                <th className="px-5 py-3">{role === 'employers' ? t('common.designation') : t('common.location')}</th>
+                <th className="px-5 py-3">{role === 'admins' ? t('common.role') : (role === 'employers' ? t('common.posted') : t('common.applied'))}</th>
+                <th className="px-5 py-3">{t('common.status')}</th>
+                <th className="px-5 py-3">{t('common.last_active')}</th>
                 <th className="px-5 py-3"></th>
               </tr>
             </thead>
@@ -100,7 +111,7 @@ export default function Users() {
                 </tr>
               ))}
               {!loading && items.length === 0 && (
-                <tr><td colSpan="7" className="px-5 py-12 text-center text-ink/55">No {meta.label.toLowerCase()} match.</td></tr>
+                <tr><td colSpan="7" className="px-5 py-12 text-center text-ink/55">{t('users.no_match', { label: roleLabel.toLowerCase() })}</td></tr>
               )}
               {!loading && items.map((u) => (
                 <tr key={u._id} className="hover:bg-cloud/60">
@@ -121,8 +132,8 @@ export default function Users() {
                     {role === 'admins'
                       ? <span className="chip-violet capitalize">{u.role}</span>
                       : role === 'employers'
-                        ? <span className="text-ink/70">{u.jobsPosted ?? '—'} jobs</span>
-                        : <span className="text-ink/70">{u.appliedCount ?? 0} apps</span>}
+                        ? <span className="text-ink/70">{t('users.jobs_posted', { n: u.jobsPosted ?? '—' })}</span>
+                        : <span className="text-ink/70">{t('users.apps_count', { n: u.appliedCount ?? 0 })}</span>}
                   </td>
                   <td className="px-5 py-3"><StatusPill status={u.status} /></td>
                   <td className="px-5 py-3 text-xs text-ink/55">
@@ -137,7 +148,7 @@ export default function Users() {
                         <button
                           onClick={() => toggleBlock(u._id)}
                           className={`btn-ghost text-xs ${u.status === 'blocked' ? 'text-emerald-700' : 'text-coral'}`}
-                          title={u.status === 'blocked' ? 'Unblock' : 'Block'}
+                          title={u.status === 'blocked' ? t('common.unblock') : t('common.block')}
                         >
                           <Ban size={13} />
                         </button>
@@ -153,6 +164,40 @@ export default function Users() {
       </div>
     </div>
   );
+}
+
+function buildUsersRows(role, items) {
+  if (role === 'employers') {
+    return [
+      ['Name', 'Email', 'Phone', 'Company', 'Designation', 'Jobs posted', 'Hires', 'Status', 'Last active', 'Created'],
+      ...items.map((u) => [
+        u.name, u.email, u.phone || '', u.company?.name || '', u.designation || '',
+        u.jobsPosted ?? 0, u.hiresCount ?? 0, u.status,
+        u.lastActiveAt ? new Date(u.lastActiveAt).toLocaleDateString() : '',
+        u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '',
+      ]),
+    ];
+  }
+  if (role === 'admins') {
+    return [
+      ['Name', 'Email', 'Role', 'Status', 'Last login'],
+      ...items.map((u) => [
+        u.name, u.email, u.role, u.status,
+        u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : '',
+      ]),
+    ];
+  }
+  return [
+    ['Name', 'Email', 'Phone', 'Headline', 'Location', 'Experience (yrs)', 'Skills', 'Apps', 'Profile views', 'Completeness %', 'Status', 'Last active', 'Created'],
+    ...items.map((u) => [
+      u.name, u.email, u.phone || '', u.headline || '', u.location || '',
+      u.totalExperienceYears ?? 0, (u.skills || []).join('; '),
+      u.appliedCount ?? 0, u.profileViews ?? 0, u.profileCompleteness ?? 0,
+      u.status,
+      u.lastActiveAt ? new Date(u.lastActiveAt).toLocaleDateString() : '',
+      u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '',
+    ]),
+  ];
 }
 
 function StatusPill({ status }) {

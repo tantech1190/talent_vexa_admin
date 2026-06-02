@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FileText, Star, Eye } from 'lucide-react';
 import api from '../api/client';
+import ExportMenu from '../components/ExportMenu';
+import { useLocale } from '../context/LocaleContext';
 
 const STATUSES = ['applied', 'shortlisted', 'interview', 'offered', 'hired', 'rejected', 'on-hold'];
 const STATUS_TONE = {
@@ -15,6 +17,7 @@ const STATUS_TONE = {
 };
 
 export default function Applications() {
+  const { t } = useLocale();
   const [items, setItems] = useState([]);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(true);
@@ -30,14 +33,32 @@ export default function Applications() {
     <div className="space-y-5">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <span className="section-eyebrow"><FileText size={12} /> Applications</span>
-          <h1 className="display mt-2 text-3xl">All applications</h1>
-          <p className="mt-1 text-sm text-ink/60">{loading ? 'Loading…' : `${items.length} applications`}</p>
+          <span className="section-eyebrow"><FileText size={12} /> {t('apps.title')}</span>
+          <h1 className="display mt-2 text-3xl">{t('apps.title')}</h1>
+          <p className="mt-1 text-sm text-ink/60">{loading ? t('common.loading') : t('apps.subtitle', { n: items.length })}</p>
         </div>
-        <select value={status} onChange={(e) => setStatus(e.target.value)} className="input max-w-[180px]">
-          <option value="">All statuses</option>
-          {STATUSES.map((s) => <option key={s}>{s}</option>)}
-        </select>
+        <div className="flex flex-wrap items-center gap-2">
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className="input max-w-[180px]">
+            <option value="">{t('common.all_statuses')}</option>
+            {STATUSES.map((s) => <option key={s}>{s}</option>)}
+          </select>
+          <ExportMenu
+            label={t('common.export')}
+            title={`${t('apps.title')} · ${new Date().toLocaleDateString()}`}
+            filename={`applications-${new Date().toISOString().slice(0, 10)}`}
+            rows={[
+              ['Candidate', 'Email', 'Job', 'Company', 'Status', 'Source', 'Rating', 'Expected salary', 'Applied', 'Starred', 'Flagged'],
+              ...items.map((a) => [
+                a.applicant?.name || '', a.applicant?.email || '',
+                a.job?.title || '', a.job?.company?.name || '',
+                a.status, a.source || '', a.rating || 0,
+                a.expectedSalary || '',
+                a.appliedAt ? new Date(a.appliedAt).toLocaleDateString() : '',
+                a.starred ? 'Yes' : 'No', a.flagged ? 'Yes' : 'No',
+              ]),
+            ]}
+          />
+        </div>
       </header>
 
       <div className="card overflow-hidden">

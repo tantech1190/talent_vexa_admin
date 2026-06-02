@@ -1,21 +1,68 @@
 import { useEffect, useState } from 'react';
 import { BarChart3, Users, Briefcase, TrendingUp } from 'lucide-react';
 import api from '../api/client';
+import ExportMenu from '../components/ExportMenu';
+import { useLocale } from '../context/LocaleContext';
+
+const pct = (n, total) => total ? `${Math.round((n / total) * 100)}%` : '0%';
 
 export default function Reports() {
+  const { t } = useLocale();
   const [d, setD] = useState(null);
   useEffect(() => { api.get('/reports').then((r) => setD(r.data.overview)); }, []);
 
-  if (!d) return <div className="card p-10 text-center text-ink/55">Loading…</div>;
+  if (!d) return <div className="card p-10 text-center text-ink/55">{t('common.loading')}</div>;
 
   const max = Math.max(...d.signupsByDay.map((p) => p.candidates + p.employers));
 
   return (
     <div className="space-y-5">
-      <header>
-        <span className="section-eyebrow"><BarChart3 size={12} /> Analytics</span>
-        <h1 className="display mt-2 text-3xl">Reports & analytics</h1>
-        <p className="mt-1 text-sm text-ink/60">Marketplace health, growth and conversion analytics.</p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <span className="section-eyebrow"><BarChart3 size={12} /> {t('reports.title')}</span>
+          <h1 className="display mt-2 text-3xl">{t('reports.title')}</h1>
+          <p className="mt-1 text-sm text-ink/60">{t('reports.subtitle')}</p>
+        </div>
+        <ExportMenu
+          label="Export full report"
+          title={`Platform report · ${new Date().toLocaleDateString()}`}
+          filename={`platform-report-${new Date().toISOString().slice(0, 10)}`}
+          meta={{
+            'Visits': d.funnel?.visits ?? 0,
+            'Signups': d.funnel?.signups ?? 0,
+            'Applied': d.funnel?.applied ?? 0,
+            'Hired': d.funnel?.hired ?? 0,
+          }}
+          sections={[
+            {
+              title: '1. Conversion funnel',
+              head: ['Stage', 'Count', 'Conversion from visits %'],
+              body: [
+                ['Visits', d.funnel?.visits ?? 0, '100%'],
+                ['Signups', d.funnel?.signups ?? 0, pct(d.funnel?.signups, d.funnel?.visits)],
+                ['Profile completed', d.funnel?.profileDone ?? 0, pct(d.funnel?.profileDone, d.funnel?.visits)],
+                ['Applied', d.funnel?.applied ?? 0, pct(d.funnel?.applied, d.funnel?.visits)],
+                ['Interviewed', d.funnel?.interviewed ?? 0, pct(d.funnel?.interviewed, d.funnel?.visits)],
+                ['Hired', d.funnel?.hired ?? 0, pct(d.funnel?.hired, d.funnel?.visits)],
+              ],
+            },
+            {
+              title: '2. Daily signups (last 30 days)',
+              head: ['Date', 'Candidates', 'Employers', 'Total'],
+              body: (d.signupsByDay || []).map((p) => [p.date, p.candidates, p.employers, p.candidates + p.employers]),
+            },
+            {
+              title: '3. Jobs by category',
+              head: ['Category', 'Jobs'],
+              body: (d.jobsByCategory || []).map((c) => [c.name, c.jobs]),
+            },
+            {
+              title: '4. Top hiring employers',
+              head: ['Rank', 'Company', 'Applications', 'Hires'],
+              body: (d.topEmployers || []).map((c, i) => [i + 1, c.company, c.applications, c.hires]),
+            },
+          ]}
+        />
       </header>
 
       {/* Signup bar chart */}

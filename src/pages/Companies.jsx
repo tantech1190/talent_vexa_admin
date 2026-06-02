@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Building2, Search, ShieldCheck, AlertCircle, Eye, Star } from 'lucide-react';
 import api from '../api/client';
+import ExportMenu from '../components/ExportMenu';
+import { useLocale } from '../context/LocaleContext';
 
 export default function Companies() {
+  const { t } = useLocale();
   const [items, setItems] = useState([]);
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(true);
@@ -18,7 +21,7 @@ export default function Companies() {
 
   const verify = async (id) => {
     await api.put(`/companies/${id}/verify`);
-    toast.success('Verified');
+    toast.success(t('common.user_verified'));
     load();
   };
 
@@ -26,16 +29,34 @@ export default function Companies() {
     <div className="space-y-5">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <span className="section-eyebrow"><Building2 size={12} /> Companies</span>
-          <h1 className="display mt-2 text-3xl">Companies</h1>
+          <span className="section-eyebrow"><Building2 size={12} /> {t('companies.title')}</span>
+          <h1 className="display mt-2 text-3xl">{t('companies.title')}</h1>
           <p className="mt-1 text-sm text-ink/60">
-            {loading ? 'Loading…' : `${items.length} companies on TalentVexa`}
+            {loading ? t('common.loading') : t('companies.subtitle', { n: items.length })}
           </p>
         </div>
-        <form onSubmit={(e) => { e.preventDefault(); load(); }} className="flex items-center gap-2 rounded-full border border-ink/10 bg-white px-3">
-          <Search size={13} className="text-ink/40" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search company" className="w-64 bg-transparent py-2 text-sm outline-none placeholder:text-ink/40" />
-        </form>
+        <div className="flex flex-wrap items-center gap-2">
+          <form onSubmit={(e) => { e.preventDefault(); load(); }} className="flex items-center gap-2 rounded-full border border-ink/10 bg-white px-3">
+            <Search size={13} className="text-ink/40" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('companies.search.placeholder')} className="w-64 bg-transparent py-2 text-sm outline-none placeholder:text-ink/40" />
+          </form>
+          <ExportMenu
+            label={t('common.export')}
+            title={`${t('companies.title')} · ${new Date().toLocaleDateString()}`}
+            filename={`companies-${new Date().toISOString().slice(0, 10)}`}
+            rows={[
+              ['Name', 'Industry', 'Size', 'HQ', 'Verified', 'Rating', 'Jobs', 'Hires', 'Subscription', 'Candidates viewed', 'Apps', 'Recruiters', 'Founded', 'Status', 'Flagged'],
+              ...items.map((c) => [
+                c.name, c.industry || '', c.size || '', c.hq || '',
+                c.verified ? 'Yes' : 'No',
+                c.rating?.toFixed(1) || '',
+                c.jobsCount ?? 0, c.hiresCount ?? 0, c.subscription || '',
+                c.candidatesViewed ?? 0, c.applicationsCount ?? 0, c.recruitersCount ?? 0,
+                c.founded || '', c.status || '', c.flagged ? 'Yes' : 'No',
+              ]),
+            ]}
+          />
+        </div>
       </header>
 
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">

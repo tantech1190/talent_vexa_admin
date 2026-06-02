@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AdminLayout from './layouts/AdminLayout';
 import Protected from './components/Protected';
+import RoleGuard from './components/RoleGuard';
 
 import Login         from './pages/Login';
 import Dashboard     from './pages/Dashboard';
@@ -28,34 +29,34 @@ export default function App() {
       <Route path="/login" element={<Login />} />
 
       <Route element={<Protected><AdminLayout /></Protected>}>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/reports" element={<Reports />} />
+        <Route path="/" element={<RoleGuard><Dashboard /></RoleGuard>} />
+        <Route path="/reports" element={<RoleGuard><Reports /></RoleGuard>} />
 
         {/* People */}
         <Route path="/users" element={<Navigate to="/users/candidates" replace />} />
-        <Route path="/users/:role" element={<Users />} />
-        <Route path="/users/detail/:id" element={<UserDetail />} />
-        <Route path="/companies" element={<Companies />} />
-        <Route path="/companies/:id" element={<CompanyDetail />} />
+        <Route path="/users/:role" element={<RoleGuard><Users /></RoleGuard>} />
+        <Route path="/users/detail/:id" element={<RoleGuard><UserDetail /></RoleGuard>} />
+        <Route path="/companies" element={<RoleGuard><Companies /></RoleGuard>} />
+        <Route path="/companies/:id" element={<RoleGuard><CompanyDetail /></RoleGuard>} />
 
         {/* Content */}
-        <Route path="/jobs" element={<Jobs />} />
-        <Route path="/jobs/:id" element={<JobDetail />} />
-        <Route path="/applications" element={<Applications />} />
-        <Route path="/categories" element={<Categories />} />
+        <Route path="/jobs" element={<RoleGuard><Jobs /></RoleGuard>} />
+        <Route path="/jobs/:id" element={<RoleGuard><JobDetail /></RoleGuard>} />
+        <Route path="/applications" element={<RoleGuard><Applications /></RoleGuard>} />
+        <Route path="/categories" element={<RoleGuard><Categories /></RoleGuard>} />
 
         {/* Ops */}
-        <Route path="/kyc" element={<Kyc />} />
-        <Route path="/subscriptions" element={<Subscriptions />} />
-        <Route path="/reports-queue" element={<ReportsQueue />} />
-        <Route path="/activity" element={<ActivityLog />} />
+        <Route path="/kyc" element={<RoleGuard><Kyc /></RoleGuard>} />
+        <Route path="/subscriptions" element={<RoleGuard><Subscriptions /></RoleGuard>} />
+        <Route path="/reports-queue" element={<RoleGuard><ReportsQueue /></RoleGuard>} />
+        <Route path="/activity" element={<RoleGuard><ActivityLog /></RoleGuard>} />
 
         {/* Comms */}
-        <Route path="/templates" element={<EmailTemplates />} />
-        <Route path="/broadcasts" element={<Broadcasts />} />
+        <Route path="/templates" element={<RoleGuard><EmailTemplates /></RoleGuard>} />
+        <Route path="/broadcasts" element={<RoleGuard><Broadcasts /></RoleGuard>} />
 
         {/* System */}
-        <Route path="/settings" element={<Settings />} />
+        <Route path="/settings" element={<RoleGuard><Settings /></RoleGuard>} />
         <Route path="/me" element={<AdminProfile />} />
       </Route>
 

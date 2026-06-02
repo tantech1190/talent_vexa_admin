@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { ShieldAlert, Briefcase, User, MessageSquare, X, CheckCircle2, AlertTriangle } from 'lucide-react';
 import api from '../api/client';
+import ExportMenu from '../components/ExportMenu';
+import { useLocale } from '../context/LocaleContext';
 
 const KIND_META = {
   job:     { icon: Briefcase,    tone: 'bg-coral/15 text-coral'     },
@@ -23,6 +25,7 @@ const STATUS_TONE = {
 };
 
 export default function ReportsQueue() {
+  const { t } = useLocale();
   const [items, setItems] = useState([]);
   const [filter, setFilter] = useState('open');
 
@@ -33,12 +36,12 @@ export default function ReportsQueue() {
 
   const resolve = async (id) => {
     await api.put(`/reports/${id}/resolve`);
-    toast.success('Resolved');
+    toast.success(t('rq.resolved_msg'));
     load();
   };
   const dismiss = async (id) => {
     await api.put(`/reports/${id}/dismiss`);
-    toast.success('Dismissed');
+    toast.success(t('rq.resolved_msg'));
     load();
   };
 
@@ -46,10 +49,24 @@ export default function ReportsQueue() {
     <div className="space-y-5">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <span className="section-eyebrow"><ShieldAlert size={12} /> Trust & Safety</span>
-          <h1 className="display mt-2 text-3xl">Reports queue</h1>
-          <p className="mt-1 text-sm text-ink/60">User-submitted reports + automated detections. Investigate and act.</p>
+          <span className="section-eyebrow"><ShieldAlert size={12} /> {t('rq.title')}</span>
+          <h1 className="display mt-2 text-3xl">{t('rq.title')}</h1>
+          <p className="mt-1 text-sm text-ink/60">{t('rq.subtitle', { n: visible.length })}</p>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <ExportMenu
+            label={t('common.export')}
+            title={`${t('rq.title')} · ${new Date().toLocaleDateString()}`}
+            filename={`reports-queue-${new Date().toISOString().slice(0, 10)}`}
+            rows={[
+              ['Kind', 'Subject', 'Reason', 'Reporter', 'Severity', 'Status', 'Created'],
+              ...visible.map((r) => [
+                r.kind, r.subject || '', r.reason || '', r.reporter || '',
+                r.severity || '', r.status || '',
+                r.createdAt ? new Date(r.createdAt).toLocaleString() : '',
+              ]),
+            ]}
+          />
         <div className="inline-flex gap-1 rounded-full border border-ink/10 bg-white p-1 text-sm">
           {['', 'open', 'under-review', 'resolved', 'dismissed'].map((s) => (
             <button
@@ -60,6 +77,7 @@ export default function ReportsQueue() {
               {s || 'All'}
             </button>
           ))}
+        </div>
         </div>
       </header>
 

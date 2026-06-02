@@ -4,8 +4,11 @@ import toast from 'react-hot-toast';
 import { Briefcase, Search, Star, MapPin, Building2, Trash2, Eye, Flag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../api/client';
+import ExportMenu from '../components/ExportMenu';
+import { useLocale } from '../context/LocaleContext';
 
 export default function Jobs() {
+  const { t } = useLocale();
   const [sp] = useSearchParams();
   const [items, setItems] = useState([]);
   const [q, setQ] = useState('');
@@ -40,23 +43,42 @@ export default function Jobs() {
     <div className="space-y-5">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <span className="section-eyebrow"><Briefcase size={12} /> Jobs</span>
-          <h1 className="display mt-2 text-3xl">All jobs</h1>
+          <span className="section-eyebrow"><Briefcase size={12} /> {t('jobs.title')}</span>
+          <h1 className="display mt-2 text-3xl">{t('jobs.title')}</h1>
           <p className="mt-1 text-sm text-ink/60">
-            {loading ? 'Loading…' : `${items.length} jobs ${flaggedOnly ? '(flagged only)' : ''}`}
+            {loading ? t('common.loading') : t('jobs.subtitle', { n: items.length })}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <form onSubmit={(e) => { e.preventDefault(); load(); }} className="flex items-center gap-2 rounded-full border border-ink/10 bg-white px-3">
             <Search size={13} className="text-ink/40" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search title" className="w-64 bg-transparent py-2 text-sm outline-none placeholder:text-ink/40" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('jobs.search.placeholder')} className="w-64 bg-transparent py-2 text-sm outline-none placeholder:text-ink/40" />
           </form>
           <select value={status} onChange={(e) => setStatus(e.target.value)} className="input max-w-[160px]">
-            <option value="">All statuses</option>
-            <option value="active">Active</option>
-            <option value="closed">Closed</option>
-            <option value="draft">Draft</option>
+            <option value="">{t('common.all_statuses')}</option>
+            <option value="active">{t('jobs.status.active')}</option>
+            <option value="closed">{t('jobs.status.closed')}</option>
+            <option value="draft">{t('jobs.status.draft')}</option>
           </select>
+          <ExportMenu
+            label={t('common.export')}
+            title={`${t('jobs.title')} · ${new Date().toLocaleDateString()}`}
+            filename={`jobs-${new Date().toISOString().slice(0, 10)}`}
+            rows={[
+              ['Title', 'Company', 'Category', 'Location', 'Work mode', 'Job type', 'Exp (yrs)', 'Salary range (₹)', 'Vacancies', 'Applications', 'Views', 'Status', 'Featured', 'Hot', 'Flagged', 'Skills', 'Posted', 'Expires'],
+              ...items.map((j) => [
+                j.title, j.company?.name || '', j.category?.name || '', j.location || '',
+                j.workMode || '', j.jobType || '',
+                `${j.experienceMin || 0}–${j.experienceMax || 0}`,
+                `${j.salaryMin || 0}–${j.salaryMax || 0}`,
+                j.vacancies ?? 1, j.applicationsCount ?? 0, j.views ?? 0,
+                j.status, j.isFeatured ? 'Yes' : 'No', j.isHot ? 'Yes' : 'No', j.flagged ? 'Yes' : 'No',
+                (j.skills || []).join('; '),
+                j.postedAt ? new Date(j.postedAt).toLocaleDateString() : '',
+                j.expiresAt ? new Date(j.expiresAt).toLocaleDateString() : '',
+              ]),
+            ]}
+          />
         </div>
       </header>
 

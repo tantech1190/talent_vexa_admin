@@ -5,65 +5,75 @@ import {
   Settings as SettingsIcon, Bell, ChevronDown, Search, Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useState } from 'react';
+import { useLocale } from '../context/LocaleContext';
+import { filterNavLinks } from '../utils/permissions';
+import { useMemo, useState } from 'react';
 
 const SECTIONS = [
   {
-    label: 'Overview',
+    labelKey: 'nav.section.overview',
     links: [
-      { to: '/',         label: 'Dashboard',  icon: LayoutDashboard, end: true },
-      { to: '/reports',  label: 'Reports & Analytics', icon: BarChart3 },
+      { to: '/',         labelKey: 'nav.dashboard',           icon: LayoutDashboard, end: true },
+      { to: '/reports',  labelKey: 'nav.reports_analytics',   icon: BarChart3 },
     ],
   },
   {
-    label: 'People',
+    labelKey: 'nav.section.people',
     links: [
-      { to: '/users/candidates', label: 'Candidates', icon: Users },
-      { to: '/users/employers',  label: 'Employers',  icon: Users },
-      { to: '/companies',        label: 'Companies',  icon: Building2 },
-      { to: '/users/admins',     label: 'Admins',     icon: ShieldCheck },
+      { to: '/users/candidates', labelKey: 'nav.candidates', icon: Users },
+      { to: '/users/employers',  labelKey: 'nav.employers',  icon: Users },
+      { to: '/companies',        labelKey: 'nav.companies',  icon: Building2 },
+      { to: '/users/admins',     labelKey: 'nav.admins',     icon: ShieldCheck },
     ],
   },
   {
-    label: 'Content',
+    labelKey: 'nav.section.content',
     links: [
-      { to: '/jobs',         label: 'Jobs',         icon: Briefcase },
-      { to: '/applications', label: 'Applications', icon: FileText },
-      { to: '/categories',   label: 'Categories',   icon: Tag },
+      { to: '/jobs',         labelKey: 'nav.jobs',         icon: Briefcase },
+      { to: '/applications', labelKey: 'nav.applications', icon: FileText },
+      { to: '/categories',   labelKey: 'nav.categories',   icon: Tag },
     ],
   },
   {
-    label: 'Operations',
+    labelKey: 'nav.section.operations',
     links: [
-      { to: '/kyc',           label: 'KYC Queue',        icon: FileCheck },
-      { to: '/subscriptions', label: 'Subscriptions',    icon: CreditCard },
-      { to: '/reports-queue', label: 'Trust & Safety',   icon: ShieldCheck },
-      { to: '/activity',      label: 'Activity Log',     icon: Activity },
+      { to: '/kyc',           labelKey: 'nav.kyc',           icon: FileCheck },
+      { to: '/subscriptions', labelKey: 'nav.commercial_billing', icon: CreditCard },
+      { to: '/reports-queue', labelKey: 'nav.reports_queue', icon: ShieldCheck },
+      { to: '/activity',      labelKey: 'nav.activity',      icon: Activity },
     ],
   },
   {
-    label: 'Communication',
+    labelKey: 'nav.section.communication',
     links: [
-      { to: '/templates',  label: 'Email Templates', icon: Mail },
-      { to: '/broadcasts', label: 'Broadcasts',      icon: Megaphone },
+      { to: '/templates',  labelKey: 'nav.templates',  icon: Mail },
+      { to: '/broadcasts', labelKey: 'nav.broadcasts', icon: Megaphone },
     ],
   },
   {
-    label: 'System',
+    labelKey: 'nav.section.system',
     links: [
-      { to: '/settings', label: 'Site Settings', icon: SettingsIcon },
+      { to: '/settings', labelKey: 'nav.settings', icon: SettingsIcon },
     ],
   },
 ];
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
+  const { t } = useLocale();
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
   const [menu, setMenu] = useState(false);
   const [search, setSearch] = useState('');
 
   const onLogout = () => { logout(); nav('/login'); };
+
+  const sections = useMemo(() => {
+    const role = user?.role;
+    return SECTIONS
+      .map((s) => ({ ...s, links: filterNavLinks(role, s.links) }))
+      .filter((s) => s.links.length > 0);
+  }, [user?.role]);
 
   const onSearch = (e) => {
     e.preventDefault();
@@ -88,16 +98,16 @@ export default function AdminLayout() {
           <Link to="/" className="flex flex-col items-start gap-2 border-b border-ink/10 px-5 py-5">
             <img src="/talentvexa.png" alt="TalentVexa" className="h-20 w-auto" />
             <span className="rounded-full bg-cobalt/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-cobalt-700">
-              Admin Console
+              {t('brand.console')}
             </span>
           </Link>
 
           {/* Nav */}
           <nav className="space-y-5 px-3 py-5">
-            {SECTIONS.map((s) => (
-              <div key={s.label}>
+            {sections.map((s) => (
+              <div key={s.labelKey}>
                 <p className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-ink/40">
-                  {s.label}
+                  {t(s.labelKey)}
                 </p>
                 <ul className="space-y-0.5">
                   {s.links.map((l) => (
@@ -110,7 +120,7 @@ export default function AdminLayout() {
                           `nav-link ${isActive ? 'nav-link-active' : 'nav-link-inactive'}`
                         }
                       >
-                        <l.icon size={15} /> {l.label}
+                        <l.icon size={15} /> {t(l.labelKey)}
                       </NavLink>
                     </li>
                   ))}
@@ -123,11 +133,10 @@ export default function AdminLayout() {
           <div className="m-3 mt-2 rounded-2xl border border-cobalt/20 bg-gradient-to-br from-cobalt-50 to-white p-4">
             <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-cobalt-700">
               <Sparkles size={11} className="-mt-0.5 mr-1 inline" />
-              Admin tip
+              {t('topbar.tip.title')}
             </p>
             <p className="mt-2 text-xs text-ink/70">
-              Press <kbd className="rounded bg-ink/10 px-1.5 py-0.5 font-mono text-[10px]">?</kbd> anywhere
-              for keyboard shortcuts.
+              {t('topbar.tip.body')}
             </p>
           </div>
         </div>
@@ -147,7 +156,7 @@ export default function AdminLayout() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search users, jobs, companies…"
+                placeholder={t('topbar.search.placeholder')}
                 className="w-72 bg-transparent text-sm outline-none placeholder:text-ink/45"
               />
               <kbd className="hidden rounded bg-white px-1.5 py-0.5 text-[10px] text-ink/45 sm:inline">↵</kbd>
@@ -157,7 +166,7 @@ export default function AdminLayout() {
           <div className="flex items-center gap-2">
             <Link
               to="/reports-queue"
-              title="Reports queue"
+              title={t('topbar.notifications')}
               className="relative grid h-10 w-10 place-items-center rounded-xl border border-ink/10 bg-white text-ink/70 hover:text-cobalt"
             >
               <Bell size={16} />
@@ -187,16 +196,16 @@ export default function AdminLayout() {
                       </span>
                     </div>
                     <Link to="/me" onClick={() => setMenu(false)} className="block px-4 py-2.5 text-sm hover:bg-cream">
-                      My profile
+                      {t('topbar.my_profile')}
                     </Link>
                     <Link to="/settings" onClick={() => setMenu(false)} className="block px-4 py-2.5 text-sm hover:bg-cream">
-                      Site settings
+                      {t('topbar.site_settings')}
                     </Link>
                     <Link to="/activity" onClick={() => setMenu(false)} className="block px-4 py-2.5 text-sm hover:bg-cream">
-                      Activity log
+                      {t('topbar.activity_log')}
                     </Link>
                     <button onClick={onLogout} className="flex w-full items-center gap-2 border-t border-ink/5 px-4 py-2.5 text-left text-sm text-coral hover:bg-coral/5">
-                      <LogOut size={14} /> Log out
+                      <LogOut size={14} /> {t('topbar.logout')}
                     </button>
                   </div>
                 </>

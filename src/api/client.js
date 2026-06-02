@@ -38,7 +38,9 @@ const state = {
 (() => {
   try {
     const t = localStorage.getItem('admin_token');
-    if (t === 'demo-admin') state.user = db.admins[0];
+    if (!t) return;
+    const email = localStorage.getItem('admin_email');
+    state.user = (email && db.admins.find((a) => a.email === email)) || db.admins[0];
   } catch {}
 })();
 
@@ -148,8 +150,11 @@ const post = async (url, body = {}) => {
   const u = norm(url);
 
   if (u === '/auth/admin/login') {
-    state.user = db.admins[0];
+    const email = String(body.email || '').toLowerCase().trim();
+    const matched = db.admins.find((a) => a.email.toLowerCase() === email);
+    state.user = matched || db.admins[0];
     localStorage.setItem('admin_token', 'demo-admin');
+    localStorage.setItem('admin_email', state.user.email);
     return ok({ token: 'demo-admin', user: state.user });
   }
 
@@ -163,6 +168,41 @@ const post = async (url, body = {}) => {
     const item = { _id: `c${Date.now()}`, jobsCount: 0, color: body.color || '#2C7DA0', ...body };
     state.categories.unshift(item);
     return ok({ category: item });
+  }
+
+  if (u === '/subscriptions') {
+    const company = state.companies.find((c) => c._id === body.companyId);
+    if (!company) return fail(400, 'Unknown company');
+    const plan = db.subscriptionPlans.find((p) => p._id === body.planId);
+    if (!plan) return fail(400, 'Unknown plan');
+    const qty = Math.max(1, Number(body.qty) || 1);
+    const discountPct = Math.max(0, Math.min(100, Number(body.discountPct) || 0));
+    const taxPct = Math.max(0, Number(body.taxPct) || 0);
+    const cycle = body.billingCycle || 'monthly';
+    const cycleMultiplier = cycle === 'annual' ? 12 : cycle === 'quarterly' ? 3 : 1;
+    const gross = (plan.price || 0) * qty * cycleMultiplier;
+    const net = Math.round(gross * (1 - discountPct / 100));
+    const taxAmount = Math.round(net * taxPct / 100);
+    const amount = net + taxAmount;
+    const item = {
+      _id: `sub${Date.now()}`,
+      company: { _id: company._id, name: company.name },
+      plan: plan.name.toLowerCase(),
+      status: 'active',
+      qty,
+      discountPct,
+      taxPct,
+      taxAmount,
+      amount,
+      billingCycle: cycle,
+      validFrom: body.validFrom || new Date().toISOString(),
+      validTo: body.validTo || null,
+      startedAt: body.validFrom || new Date().toISOString(),
+      renewsAt: body.validTo || null,
+      invoicesCount: 0,
+    };
+    state.subscriptions.unshift(item);
+    return ok({ subscription: item });
   }
 
   if (u === '/templates') {

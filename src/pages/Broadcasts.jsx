@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Megaphone, Send, Users, Building2, Sparkles } from 'lucide-react';
 import api from '../api/client';
+import ExportMenu from '../components/ExportMenu';
+import { useLocale } from '../context/LocaleContext';
 
 const AUDIENCES = [
   { v: 'all',        l: 'All users',      icon: Sparkles,  tone: 'from-cobalt to-cobalt-700' },
@@ -10,6 +12,7 @@ const AUDIENCES = [
 ];
 
 export default function Broadcasts() {
+  const { t } = useLocale();
   const [items, setItems] = useState([]);
   const [audience, setAudience] = useState('all');
   const [subject, setSubject] = useState('');
@@ -33,14 +36,29 @@ export default function Broadcasts() {
 
   return (
     <div className="space-y-5">
-      <header>
-        <span className="section-eyebrow"><Megaphone size={12} /> Broadcasts</span>
-        <h1 className="display mt-2 text-3xl">Broadcast announcement</h1>
-        <p className="mt-1 text-sm text-ink/60">Send platform-wide announcements to all users or specific roles.</p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <span className="section-eyebrow"><Megaphone size={12} /> {t('broadcasts.title')}</span>
+          <h1 className="display mt-2 text-3xl">{t('broadcasts.title')}</h1>
+          <p className="mt-1 text-sm text-ink/60">{t('broadcasts.subtitle')}</p>
+        </div>
+        <ExportMenu
+          label={t('common.export')}
+          title={`Broadcast history · ${new Date().toLocaleDateString()}`}
+          filename={`broadcasts-${new Date().toISOString().slice(0, 10)}`}
+          rows={[
+            ['Sent at', 'Audience', 'Subject', 'Body', 'Sent to', 'Open rate %'],
+            ...items.map((b) => [
+              b.sentAt ? new Date(b.sentAt).toLocaleString() : '',
+              b.audience, b.subject, (b.body || '').replace(/\s+/g, ' ').slice(0, 200),
+              b.sentTo ?? 0, b.openedRate ?? 0,
+            ]),
+          ]}
+        />
       </header>
 
       <form onSubmit={send} className="card p-5">
-        <p className="label">Audience</p>
+        <p className="label">{t('broadcasts.audience')}</p>
         <div className="grid gap-2 sm:grid-cols-3">
           {AUDIENCES.map((a) => (
             <button

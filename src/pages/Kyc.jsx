@@ -5,6 +5,8 @@ import {
   CheckCircle2, AlertCircle, ChevronRight,
 } from 'lucide-react';
 import api from '../api/client';
+import ExportMenu from '../components/ExportMenu';
+import { useLocale } from '../context/LocaleContext';
 
 const STATUS_META = {
   pending:        { label: 'Pending',       tone: 'chip-gold',    icon: Clock },
@@ -14,6 +16,7 @@ const STATUS_META = {
 };
 
 export default function Kyc() {
+  const { t } = useLocale();
   const [items, setItems] = useState([]);
   const [status, setStatus] = useState('');
   const [active, setActive] = useState(null);
@@ -31,13 +34,13 @@ export default function Kyc() {
 
   const approve = async (id) => {
     await api.put(`/kyc/${id}/approve`);
-    toast.success('KYC approved · company verified');
+    toast.success(t('kyc.approved_msg'));
     setActive(null);
     load();
   };
   const reject = async (id) => {
     await api.put(`/kyc/${id}/reject`);
-    toast.success('KYC rejected');
+    toast.success(t('kyc.rejected_msg'));
     setActive(null);
     load();
   };
@@ -46,10 +49,25 @@ export default function Kyc() {
     <div className="space-y-5">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <span className="section-eyebrow"><FileCheck size={12} /> KYC Verification</span>
-          <h1 className="display mt-2 text-3xl">Employer KYC queue</h1>
-          <p className="mt-1 text-sm text-ink/60">Review documents submitted by employers during onboarding.</p>
+          <span className="section-eyebrow"><FileCheck size={12} /> {t('kyc.title')}</span>
+          <h1 className="display mt-2 text-3xl">{t('kyc.title')}</h1>
+          <p className="mt-1 text-sm text-ink/60">{t('kyc.subtitle', { n: items.length })}</p>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <ExportMenu
+            label={t('common.export')}
+            title={`${t('kyc.title')} · ${new Date().toLocaleDateString()}`}
+            filename={`kyc-${new Date().toISOString().slice(0, 10)}`}
+            rows={[
+              ['Company', 'Legal name', 'PAN', 'GSTIN', 'CIN', 'Submitted by', 'Status', 'Path', 'Submitted', 'Notes'],
+              ...items.map((k) => [
+                k.company?.name || '', k.legalName || '', k.pan || '', k.gstin || '', k.cin || '',
+                k.submittedBy?.name || '', k.status || '', k.verificationPath || '',
+                k.submittedAt ? new Date(k.submittedAt).toLocaleDateString() : '',
+                k.notes || '',
+              ]),
+            ]}
+          />
         <div className="inline-flex gap-1 rounded-full border border-ink/10 bg-white p-1 text-sm">
           {['', 'pending', 'under-review', 'approved', 'rejected'].map((s) => (
             <button
@@ -60,6 +78,7 @@ export default function Kyc() {
               {s || 'All'}
             </button>
           ))}
+        </div>
         </div>
       </header>
 
